@@ -11,17 +11,18 @@ const MANIFEST_MAX_BYTES = 256 * 1024
 /**
  * A catalog that keeps its plugins in its own repository already holds their images, so a newest
  * release listed without `images` borrows the manifest's from the catalog commit. Extraction then
- * checks those bytes like any declared image, through the returned reader so they are not read twice.
+ * checks those images like any declared image; bytes read here are not kept, so filling every entry
+ * before the budget is spent holds no more than one image at a time.
  */
 export async function fillMonorepoReleaseImages(
   entry: PluginMarketplaceEntry,
   catalogUrl: string,
   readBlob: CatalogBlobReader
-): Promise<{ entry: PluginMarketplaceEntry; readBlob: CatalogBlobReader }> {
+): Promise<PluginMarketplaceEntry> {
   const [newest, ...older] = entry.releases ?? []
   const prefix = entry.source.path
   if (!newest || newest.images || !prefix || !isSameGitRepository(entry.source.url, catalogUrl)) {
-    return { entry, readBlob }
+    return entry
   }
   const manifestBytes = await readBlob(`${prefix}/orca-plugin.json`, MANIFEST_MAX_BYTES).catch(
     () => null
@@ -32,28 +33,11 @@ export async function fillMonorepoReleaseImages(
   } catch {
     manifest = null
   }
-  const read = new Map<string, Buffer>()
   const images = await catalogImagesFromManifest({
     manifest,
     prefix,
-    read: async (path, maxBytes) => {
-      const bytes = await readBlob(path, maxBytes)
-      if (bytes) {
-        read.set(path, bytes)
-      }
-      return bytes
-    },
+    read: readBlob,
     sha256: (bytes) => sha256Hex(Buffer.from(bytes))
   })
-  if (!images) {
-    return { entry, readBlob }
-  }
-  return {
-    entry: { ...entry, releases: [{ ...newest, images }, ...older] },
-    // Why the size check: a pinned blob larger than `maxBytes` reads as null, as readBlob would.
-    readBlob: async (path, maxBytes) => {
-      const bytes = read.get(path)
-      return bytes ? (bytes.byteLength <= maxBytes ? bytes : null) : readBlob(path, maxBytes)
-    }
-  }
+  return images ? { ...entry, releases: [{ ...newest, images }, ...older] } : entry
 }

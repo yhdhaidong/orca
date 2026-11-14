@@ -32,9 +32,7 @@ export type {
   PluginMarketplaceSourceState
 } from './plugin-marketplace-projection'
 
-type MarketplaceFetcher = (
-  source: PluginMarketplaceRegisteredSource
-) => Promise<PluginMarketplaceFetchResult>
+type MarketplaceFetcher = typeof fetchPluginMarketplace
 
 export class PluginMarketplaceService {
   private readonly store: PluginMarketplaceStore
@@ -255,7 +253,7 @@ export class PluginMarketplaceService {
   private async fetchAndValidate(
     source: PluginMarketplaceRegisteredSource
   ): Promise<PluginMarketplaceFetchResult> {
-    const fetched = await this.fetcher(source)
+    const fetched = await this.fetcher(source, { hostVersion: this.hostVersion })
     validateMarketplaceProvenance(source, fetched)
     const cache = this.imageCache
     if (cache) {
