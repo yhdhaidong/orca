@@ -95,8 +95,17 @@ export function recordJournalLegacyChatRevision(
   sessionId: string,
   revision: string
 ): void {
+  writeJournalStoreMeta(db, journalLegacyChatRevisionKey(sessionId), revision)
+}
+
+export function readJournalStoreMeta(db: Database.Database, key: string): string | undefined {
+  const row = db.prepare('SELECT value FROM agent_session_store_meta WHERE key=?').get(key)
+  return row === undefined ? undefined : String(row.value)
+}
+
+export function writeJournalStoreMeta(db: Database.Database, key: string, value: string): void {
   db.prepare('INSERT OR REPLACE INTO agent_session_store_meta (key, value) VALUES (?, ?)').run(
-    journalLegacyChatRevisionKey(sessionId),
-    revision
+    key,
+    value
   )
 }
