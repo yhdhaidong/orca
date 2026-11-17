@@ -1,6 +1,5 @@
 import { AgentSessionProviderAliasIndex } from './agent-session-provider-alias-index'
 import { AgentSessionLeaseHolderIndex } from './agent-session-lease-holder-index'
-import type { AgentSessionRecord } from '../../../../shared/agent-session/lifecycle/agent-session-record'
 import {
   applyAgentSessionStoreCommand,
   type AgentSessionStoreCommand,
@@ -58,7 +57,7 @@ export class AgentSessionStoreTransactions {
   /** Lineage survives admission and lease writes; membership and committed clear invalidate it. */
   private lineage: object = {}
   private providerAliases: AgentSessionProviderAliasIndex | null = null
-  private readonly leaseHolders: AgentSessionLeaseHolderIndex
+  readonly leaseHolders: AgentSessionLeaseHolderIndex
   private readonly receiptCommits = new WeakMap<
     JournalReceiptStage,
     { remaining: number; results: (readonly JournalWriterEffectResult[])[]; failed: boolean }
@@ -99,10 +98,6 @@ export class AgentSessionStoreTransactions {
   providerAliasOwner(nativeId: string): string | null {
     this.providerAliases ??= new AgentSessionProviderAliasIndex(this.published)
     return this.providerAliases.owner(nativeId)
-  }
-
-  listLeaseHolders(): AgentSessionRecord[] {
-    return this.leaseHolders.list(this.published)
   }
 
   get readOnly(): boolean {
