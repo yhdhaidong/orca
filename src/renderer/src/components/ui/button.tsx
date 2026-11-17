@@ -26,6 +26,8 @@ const buttonVariants = cva(
         'queued-head-steer':
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 [[data-native-chat-root]:has([data-native-chat-steer-preview=steer-queued])_&]:bg-primary [[data-native-chat-root]:has([data-native-chat-steer-preview=steer-queued])_&]:text-primary-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
+        // A link-style action on an error line, e.g. "Delete anyway" under a failed row.
+        'destructive-link': 'text-destructive underline-offset-4 hover:underline',
         'menu-launch':
           'min-w-0 flex-1 justify-start rounded-l-[7px] rounded-r-none text-foreground',
         'menu-segment': 'rounded-l-none border-l border-border',

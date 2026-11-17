@@ -156,16 +156,23 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
 function DialogFooter({
   className,
   showCloseButton = false,
+  variant = 'default',
   children,
   ...props
 }: React.ComponentProps<'div'> & {
   showCloseButton?: boolean
+  /** `bar`: a full-width footer strip with a top divider, for edge-to-edge dialogs (p-0). */
+  variant?: 'default' | 'bar'
 }) {
   const t = useTranslate()
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      className={cn(
+        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        variant === 'bar' && 'border-t border-border px-4 py-3',
+        className
+      )}
       {...props}
     >
       {children}
