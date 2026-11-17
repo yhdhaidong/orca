@@ -117,6 +117,18 @@ describe('extractCatalogImages', () => {
     expect(imagesOf(result, 'a.shared')).toEqual({ screenshots: [wide] })
   })
 
+  it('keeps a cover whose bytes are missing at another plugin path', async () => {
+    const cover = image('b/cover.png', 1600, 1000, 200 * 1024)
+    const missing = { ...cover, path: 'a/missing.png' }
+    const first = plugin('a.missing', [release('1.0.0', { cover: missing })])
+    const second = plugin('b.cover', [release('1.0.0', { cover })])
+
+    const result = await extractCatalogImages(catalog([first, second]), read)
+
+    expect(imagesOf(result, 'a.missing')).toBeUndefined()
+    expect(imagesOf(result, 'b.cover')).toEqual({ cover })
+  })
+
   it('checks bytes kept as one plugin cover against the icon rules of another', async () => {
     const cover = image('a/cover.png', 1600, 1000, 200 * 1024)
     const first = plugin('a.cover', [release('1.0.0', { cover })])

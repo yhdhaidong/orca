@@ -73,11 +73,12 @@ export async function extractCatalogImages(
     entries.push(fill ? await fill(listed, readBlob) : listed)
   }
   const kept = new Map<string, Buffer>()
-  // Why keyed per use: bytes that fail one kind's rules (a non-square icon) can be a valid screenshot.
+  // Why keyed per use: bytes that fail as an icon can be a valid screenshot, and a missing path
+  // must not reject the same image declared at another path.
   const rejected = new Set<string>()
   let budget = CATALOG_IMAGES_MAX_BYTES
   const check = async ({ image, kind }: ImageUse): Promise<boolean> => {
-    const key = `${kind}:${image.sha256}:${image.width}x${image.height}`
+    const key = `${kind}:${image.path}:${image.sha256}:${image.width}x${image.height}`
     if (rejected.has(key)) {
       return false
     }
