@@ -37,6 +37,9 @@ for (const ref of ['v1.4.259', 'v1.4.260', 'v1.4.261']) {
   test(`${ref} treats every lease as unreconciled after this build installed the store`, { timeout: 600_000 }, async () => {
     const directory = await mkdtemp(join(tmpdir(), 'orca-l1-downgrade-'))
     try {
+      // Create the store as this build would, then seed saved rows and reopen it (a restart).
+      await openTestAgentSessionRecordStore(directory)
+      await closeTestAgentSessionDatabase(directory)
       await withTestAgentSessionDatabase(directory, (db) => {
         const insert = db.prepare('INSERT INTO agent_session_records (session_id, record_json) VALUES (?, ?)')
         insert.run('idle', JSON.stringify(storedTestAgentSessionRecord(idle)))
