@@ -86,20 +86,14 @@ class AgentPickerAcquisition {
         this.publish()
         this.admit('catalog')
       })
-      for (const [index, job] of this.jobs.entries()) {
-        const view = this.entries[job.index]
-        if (
-          view.catalogRead !== 'pending' &&
-          (view.catalog.origin === 'unknown' ||
-            view.catalogRead === 'failed' ||
-            view.catalogRead === 'unsupported' ||
-            view.catalog.unavailable !== undefined ||
-            view.catalog.listingInProgress)
-        ) {
-          this.queued.catalog.add(index)
-          this.entries = updateAgentPickerCatalog(this.entries, job, { catalogRead: 'pending' })
-        }
-      }
+      this.requeueCatalogs(
+        (view) =>
+          view.catalog.origin === 'unknown' ||
+          view.catalogRead === 'failed' ||
+          view.catalogRead === 'unsupported' ||
+          view.catalog.unavailable !== undefined ||
+          view.catalog.listingInProgress === true
+      )
       for (const [i, read] of this.supports) {
         if (read.state === 'settled') {
           this.supports.set(i, { state: 'queued' })
@@ -157,6 +151,25 @@ class AgentPickerAcquisition {
       }
       return shallow(this.entries[i], next) ? this.entries[i] : next
     })
+  }
+
+  /** Reads an agent's models again while the picker stays open, as reopening it would. */
+  retry(agent: AgentPickerEntry['agent']) {
+    if (this.observers.size) {
+      this.requeueCatalogs((view) => view.agent === agent)
+      this.publish()
+      this.admit('catalog')
+    }
+  }
+
+  private requeueCatalogs(matches: (view: AgentPickerEntry) => boolean) {
+    for (const [index, job] of this.jobs.entries()) {
+      if (this.entries[job.index].catalogRead !== 'pending' && matches(this.entries[job.index])) {
+        this.queued.refresh.delete(index)
+        this.queued.catalog.add(index)
+        this.entries = updateAgentPickerCatalog(this.entries, job, { catalogRead: 'pending' })
+      }
+    }
   }
 
   currentEntries() {
@@ -293,6 +306,10 @@ export function observeAgentPickerAcquisition(
     pending.set(key, resource)
   }
   return resource.observe(observer)
+}
+
+export function retryAgentPickerCatalog(key: string, agent: AgentPickerEntry['agent']) {
+  pending.get(key)?.retry(agent)
 }
 
 export function currentAgentPickerAcquisition(key: string) {
