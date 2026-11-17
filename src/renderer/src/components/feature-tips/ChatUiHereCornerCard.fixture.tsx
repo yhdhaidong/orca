@@ -55,7 +55,7 @@ function ClosableCornerCard(): React.JSX.Element | null {
 }
 
 export const keptAgents = defineFixture({
-  width: 900,
+  width: 1280,
   store: {
     settings: createGlobalSettingsFixture({
       agentDefaultSurface: 'terminal',
@@ -65,7 +65,7 @@ export const keptAgents = defineFixture({
   },
   render: () => (
     <>
-      <div className="h-[420px] w-[360px]">
+      <div className="flex h-[900px] w-[360px] items-end p-4">
         <ClosableCornerCard />
       </div>
       <Toaster closeButton toastOptions={{ className: 'font-sans text-sm' }} />
